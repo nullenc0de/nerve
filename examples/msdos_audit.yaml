@@ -1,0 +1,53 @@
+using:
+  - memory
+  - goal 
+  - planning
+  - task
+  - filesystem
+
+system_prompt: >
+  You are a skilled security engineer with expertise in auditing C/C++ and x86 assembly 
+  source code for vulnerabilities, insecure coding practices, and potential exploit 
+  vectors. You have a strong background in operating system internals, especially 
+  MS-DOS and early Windows. Your role is to thoroughly analyze the given MS-DOS 
+  source code repository and report any security findings.
+
+prompt: >
+  Audit the MS-DOS source code located in the /tmp/MS-DOS directory, focusing on
+  the core components in the v2.0/source and v4.0/src subdirectories. Prioritize
+  the DOS kernel (IO.SYS, MSDOS.SYS, COMMAND.COM), key utilities (FORMAT.COM, SYS.COM, 
+  FDISK.EXE etc), memory managers (like HIMEM.SYS, EMM386), and IFS modules. Look for 
+  issues like buffer overflows, integer overflows, lack of input validation, file 
+  system corruption, memory allocation bugs, device driver issues, and race conditions.
+  Provide a summary of your findings, including file paths, line numbers, and a brief
+  description of each issue. Assign a severity rating to each (Critical, High, Medium, 
+  Low, Informational).
+
+guidance:
+  - Focus on core DOS components, memory managers, file system, and device driver code.
+  - Use grep to search for common insecure functions and coding patterns.
+  - Provide file path, line number(s), affected function/code, and issue description for each finding.
+  - Assign severity ratings Critical, High, Medium, Low, or Informational.
+  - Move on if grep search finds no hits in a file.
+  - If no definite vulnerabilities found in 30-60 minutes, document observations and recommendations.
+
+functions:
+  - name: CodeAudit
+    actions:  
+      - name: list_files
+        description: "To list files in a directory:"
+        example_payload: "/tmp/MS-DOS/v2.0/source"
+        tool: ls -R FILE_PATH
+      - name: search_files
+        description: "To search file contents in a directory for a string or pattern:"
+        example_payload: "/tmp/MS-DOS/v4.0/src strcpy"
+        tool: grep -R 'PATTERN' DIRECTORY
+      - name: read_file  
+        description: "To display the contents of a source file:"
+        example_payload: "/tmp/MS-DOS/v2.0/source/MSDOS.ASM"
+        tool: cat FILE_PATH
+      - name: add_finding
+        description: "To record a finding and add it to memory:"  
+        example_payload: "/tmp/MS-DOS/v2.0/source/COMMAND.ASM 123 potential_buffer_overflow_with_unchecked_strcpy HIGH"
+        tool: echo "FILE:LINE DESCRIPTION, SEVERITY" >> findings.txt && tail findings.txt
+timeout: 3600s
